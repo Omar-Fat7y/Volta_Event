@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <title>بيانات العميل</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        direction: rtl;
+        padding: 30px;
+        background: #f0f0f0;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 400px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      img {
+        width: 200px;
+        display: block;
+        margin: 20px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card" id="card">
+      <h2 id="title">جارٍ التحميل...</h2>
+      <div id="content" style="display: none">
+        <p><strong>الاسم:</strong> <span id="name"></span></p>
+        <div id="extra" style="display: none">
+          <p><strong>البريد:</strong> <span id="email"></span></p>
+          <p><strong>الهاتف:</strong> <span id="phone"></span></p>
+          <p><strong>الرقم التعريفي:</strong> <span id="id"></span></p>
+        </div>
+        <img id="qr" src="" alt="QR Code" />
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const full = params.get("full") === "true";
+
+      fetch(`/api/client/${id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) {
+            document.getElementById("title").textContent =
+              "❌ العميل غير موجود";
+          } else {
+            document.getElementById("title").textContent = "بيانات العميل";
+            document.getElementById("name").textContent = data.name;
+            document.getElementById("content").style.display = "block";
+
+            if (full) {
+              document.getElementById("email").textContent = data.email;
+              document.getElementById("phone").textContent = data.phone;
+              document.getElementById("id").textContent = data.id;
+              document.getElementById("extra").style.display = "block";
+            } else {
+              const qrLink = `${window.location.origin}/client.html?id=${id}&full=true`;
+              fetch(
+                `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
+                  qrLink
+                )}&size=200x200`
+              ).then(() => {
+                document.getElementById(
+                  "qr"
+                ).src = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(
+                  qrLink
+                )}&size=200x200`;
+              });
+            }
+          }
+        })
+        .catch(() => {
+          document.getElementById("title").textContent =
+            "❌ حدث خطأ أثناء تحميل البيانات";
+        });
+    </script>
+  </body>
+</html>
